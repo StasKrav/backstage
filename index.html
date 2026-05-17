@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Backstage — закрытое сообщество музыкантов</title>
-  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -17,12 +16,11 @@
 
     body {
       font-family: 'Comfortaa', 'Inter', system-ui, -apple-system, sans-serif;
-      background: #FDF7F0;  /* тёплый кремовый фон */
+      background: #FDF7F0;
       color: #2E2E2E;
       line-height: 1.45;
     }
 
-    /* Основные переменные */
     :root {
       --bg-body: #FDF7F0;
       --card-bg: #FFFFFF;
@@ -37,7 +35,6 @@
       --radius-btn: 40px;
     }
 
-    /* контейнер-телефон */
     .app-wrapper {
       max-width: 600px;
       margin: 0 auto;
@@ -47,7 +44,6 @@
       box-shadow: 0 0 0 1px var(--border-light);
     }
 
-    /* Хедер */
     .app-header {
       position: sticky;
       top: 0;
@@ -73,7 +69,6 @@
       font-weight: 700;
     }
 
-    /* гамбургер */
     .hamburger {
       background: none;
       border: none;
@@ -82,18 +77,101 @@
       border-radius: 50%;
       transition: background 0.2s;
       color: var(--text-primary);
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .hamburger:hover {
       background: var(--border-light);
     }
 
-    /* контент */
     .main-content {
       padding: 20px 16px 90px;
     }
 
-    /* лента (карточки) */
+    /* Панель фильтров */
+    .filters-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .filter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 6px 14px 6px 10px;
+      border-radius: 40px;
+      background: #F4EDE6;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .filter-badge .badge-icon {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      fill: none;
+    }
+
+    .filter-badge.work {
+      background: #FFEEE6;
+      color: var(--accent);
+    }
+    .filter-badge.gear {
+      background: #E8F0EA;
+      color: #2F6B47;
+    }
+    .filter-badge.discourse {
+      background: #FEF3E2;
+      color: #C47A2E;
+    }
+
+    .filter-badge.active {
+      border-color: currentColor;
+      box-shadow: 0 0 0 1px currentColor;
+      opacity: 1;
+    }
+
+    .filter-badge:not(.active) {
+      opacity: 0.6;
+    }
+
+    .filter-badge:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+
+    .reset-filter {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 20px;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .reset-filter:hover {
+      background: var(--border-light);
+      color: var(--text-primary);
+    }
+
     .feed-list {
       display: flex;
       flex-direction: column;
@@ -119,12 +197,31 @@
     }
 
     .badge-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-size: 0.7rem;
       font-weight: 500;
-      padding: 4px 12px;
+      padding: 4px 12px 4px 8px;
       border-radius: 30px;
       background: #F4EDE6;
       color: var(--text-secondary);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .badge-type:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
+    }
+
+    .badge-icon {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      fill: none;
+      pointer-events: none;
     }
 
     .badge-type.work {
@@ -198,7 +295,6 @@
       cursor: pointer;
     }
 
-    /* плавающая кнопка */
     .fab {
       position: fixed;
       bottom: 80px;
@@ -231,7 +327,6 @@
       }
     }
 
-    /* модальное окно */
     .modal {
       display: none;
       position: fixed;
@@ -314,7 +409,6 @@
       flex: 1;
     }
 
-    /* нижняя навигация */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -351,7 +445,6 @@
       height: 22px;
     }
 
-    /* экраны */
     .screen {
       display: none;
       animation: fade 0.2s ease;
@@ -366,7 +459,6 @@
       to { opacity: 1; transform: translateY(0);}
     }
 
-    /* профиль (заглушка тёплая) */
     .profile-card {
       background: var(--card-bg);
       border-radius: 28px;
@@ -387,7 +479,6 @@
       margin: 0 auto 12px;
     }
 
-    /* меню */
     .side-menu {
       position: fixed;
       top: 0;
@@ -426,7 +517,6 @@
       text-decoration: none;
     }
 
-    /* доступ */
     .access-screen {
       position: fixed;
       inset: 0;
@@ -448,12 +538,9 @@
   </style>
 </head>
 <body>
-<div class="app-wrapper" id="appRoot">
-  <!-- динамический контент будет заполняться через js -->
-</div>
+<div class="app-wrapper" id="appRoot"></div>
 
 <script>
-  // ---------- ДАННЫЕ ----------
   let posts = [
     { id: "1", type: "work", title: "Барабанщик на запись альбома (пост-рок)", description: "Студия в центре, 4 трека, оплата 15к + роялти. Пришлите демо в личку.", tags: ["барабаны","студия","пост-рок"], createdAt: new Date(Date.now()-86400000), author: "Антон Д." },
     { id: "2", type: "gear", title: "Fender Stratocaster MIM 2020 · обмен на Gibson", description: "Отличное состояние, оригинальный кейс. Готов доплатить.", tags: ["гитара","fender","обмен"], createdAt: new Date(Date.now()-172800000), author: "Мария (гитара)" },
@@ -462,16 +549,22 @@
 
   let currentUser = null; 
   let activeTab = "feed";
+  let currentFilter = null; // 'work', 'gear', 'discourse' или null
 
-  // helpers
   function formatDate(date) {
     return `${date.getDate()} ${date.toLocaleString('ru',{month:'short'})} · ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
   }
 
-  function getTypeMeta(type) {
-    if(type === 'work') return { label: 'вакансия / проект', class: 'work' };
-    if(type === 'gear') return { label: 'оборудование', class: 'gear' };
-    return { label: 'дискурс', class: 'discourse' };
+  const typeIcons = {
+    work: `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+    gear: `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+    discourse: `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`
+  };
+
+  function getBadgeHTML(type) {
+    const labels = { work: 'вакансия', gear: 'оборудование', discourse: 'дискурс' };
+    const classes = { work: 'work', gear: 'gear', discourse: 'discourse' };
+    return `<span class="badge-type ${classes[type]}" data-type="${type}">${typeIcons[type]}<span class="badge-text">${labels[type]}</span></span>`;
   }
 
   function escapeHtml(str) {
@@ -486,18 +579,24 @@
   function renderFeed() {
     const feedContainer = document.getElementById('feedList');
     if(!feedContainer) return;
-    if(posts.length===0) {
+    
+    let filteredPosts = posts;
+    if (currentFilter) {
+      filteredPosts = posts.filter(post => post.type === currentFilter);
+    }
+    
+    if(filteredPosts.length === 0) {
       feedContainer.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-secondary);">Нет публикаций · создайте первую</div>';
       return;
     }
-    feedContainer.innerHTML = posts.map(post => {
-      const meta = getTypeMeta(post.type);
+    
+    feedContainer.innerHTML = filteredPosts.map(post => {
       const dateStr = formatDate(new Date(post.createdAt));
       const tagsHtml = post.tags.map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('');
       return `
         <div class="post-card">
           <div class="post-header">
-            <span class="badge-type ${meta.class}">${meta.label}</span>
+            ${getBadgeHTML(post.type)}
             <span class="verified-mark">${escapeHtml(post.author)} · проверен</span>
           </div>
           <div class="post-title">${escapeHtml(post.title)}</div>
@@ -509,6 +608,30 @@
         </div>
       `;
     }).join('');
+    
+    // обновить активные классы у фильтров в панели
+    document.querySelectorAll('.filter-badge').forEach(badge => {
+      const type = badge.getAttribute('data-type');
+      if (currentFilter === type) {
+        badge.classList.add('active');
+      } else {
+        badge.classList.remove('active');
+      }
+    });
+  }
+
+  function filterByType(type) {
+    if (currentFilter === type) {
+      currentFilter = null;
+    } else {
+      currentFilter = type;
+    }
+    renderFeed();
+  }
+
+  function resetFilter() {
+    currentFilter = null;
+    renderFeed();
   }
 
   function addNewPost(type, title, desc, tagsRaw) {
@@ -524,11 +647,9 @@
     };
     posts.unshift(newPost);
     renderFeed();
-    // переключиться на ленту
     setActiveScreen('feed');
   }
 
-  // навигация
   function setActiveScreen(screenId) {
     activeTab = screenId;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -539,29 +660,31 @@
     if(activeNav) activeNav.classList.add('active');
   }
 
-  // плавающая кнопка + модалка
   function initModal() {
     const modal = document.getElementById('createModal');
     const fab = document.getElementById('fabBtn');
     const closeModal = () => { modal.style.display = 'none'; };
-    fab.onclick = () => { modal.style.display = 'flex'; };
-    document.getElementById('cancelPost').onclick = closeModal;
-    document.getElementById('submitPost').onclick = () => {
-      const type = document.getElementById('postType').value;
-      const title = document.getElementById('postTitle').value.trim();
-      const desc = document.getElementById('postDesc').value.trim();
-      const tags = document.getElementById('postTags').value;
-      if(!title || !desc) { alert('Заголовок и описание обязательны'); return; }
-      addNewPost(type, title, desc, tags);
-      closeModal();
-      document.getElementById('postTitle').value = '';
-      document.getElementById('postDesc').value = '';
-      document.getElementById('postTags').value = '';
-    };
+    if (fab) fab.onclick = () => { modal.style.display = 'flex'; };
+    const cancelBtn = document.getElementById('cancelPost');
+    const submitBtn = document.getElementById('submitPost');
+    if (cancelBtn) cancelBtn.onclick = closeModal;
+    if (submitBtn) {
+      submitBtn.onclick = () => {
+        const type = document.getElementById('postType').value;
+        const title = document.getElementById('postTitle').value.trim();
+        const desc = document.getElementById('postDesc').value.trim();
+        const tags = document.getElementById('postTags').value;
+        if(!title || !desc) { alert('Заголовок и описание обязательны'); return; }
+        addNewPost(type, title, desc, tags);
+        closeModal();
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postDesc').value = '';
+        document.getElementById('postTags').value = '';
+      };
+    }
     window.onclick = (e) => { if(e.target === modal) closeModal(); };
   }
 
-  // гамбургер меню
   function initHamburger() {
     const menuEl = document.getElementById('sideMenu');
     const overlay = document.getElementById('menuOverlay');
@@ -570,18 +693,44 @@
       menuEl.classList.remove('open');
       overlay.style.display = 'none';
     };
-    openBtn.onclick = () => {
-      menuEl.classList.add('open');
-      overlay.style.display = 'block';
-    };
-    overlay.onclick = closeMenu;
-    document.getElementById('logoutBtn').onclick = () => {
-      localStorage.removeItem('backstage_user');
-      location.reload();
-    };
+    if (openBtn) {
+      openBtn.onclick = () => {
+        menuEl.classList.add('open');
+        overlay.style.display = 'block';
+      };
+    }
+    if (overlay) overlay.onclick = closeMenu;
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.onclick = () => {
+        localStorage.removeItem('backstage_user');
+        location.reload();
+      };
+    }
   }
 
-  // система аутентификации
+  function initFilters() {
+    // Фильтры в панели
+    const workFilter = document.getElementById('filterWork');
+    const gearFilter = document.getElementById('filterGear');
+    const discourseFilter = document.getElementById('filterDiscourse');
+    const resetBtn = document.getElementById('resetFilterBtn');
+    
+    if (workFilter) workFilter.onclick = () => filterByType('work');
+    if (gearFilter) gearFilter.onclick = () => filterByType('gear');
+    if (discourseFilter) discourseFilter.onclick = () => filterByType('discourse');
+    if (resetBtn) resetBtn.onclick = () => resetFilter();
+    
+    // Фильтры внутри карточек (бейджи)
+    document.addEventListener('click', (e) => {
+      const badge = e.target.closest('.badge-type');
+      if (badge && badge.getAttribute('data-type')) {
+        const type = badge.getAttribute('data-type');
+        filterByType(type);
+      }
+    });
+  }
+
   function renderAccessScreen() {
     const root = document.getElementById('appRoot');
     root.innerHTML = `
@@ -614,10 +763,24 @@
       <div>
         <header class="app-header">
           <div class="logo">Back<span>stage</span></div>
-          <button class="hamburger" id="hamburgerBtn">:</i></button>
+          <button class="hamburger" id="hamburgerBtn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="18" r="1.5" fill="currentColor" stroke="none"/>
+            </svg>
+          </button>
         </header>
         <div class="main-content">
-          <div class="screen active" id="feedScreen"><div class="feed-list" id="feedList"></div></div>
+          <div class="screen active" id="feedScreen">
+            <div class="filters-bar">
+              <span class="filter-badge work" id="filterWork" data-type="work">${typeIcons.work}<span>вакансия</span></span>
+              <span class="filter-badge gear" id="filterGear" data-type="gear">${typeIcons.gear}<span>оборудование</span></span>
+              <span class="filter-badge discourse" id="filterDiscourse" data-type="discourse">${typeIcons.discourse}<span>дискурс</span></span>
+              <button class="reset-filter" id="resetFilterBtn"><i class="fa-regular fa-times"></i> всё</button>
+            </div>
+            <div class="feed-list" id="feedList"></div>
+          </div>
           <div class="screen" id="searchScreen"><div style="background: white; border-radius: 28px; padding: 24px; text-align: center;"><i class="fa-solid fa-search"></i> <p style="margin-top: 12px;">Поиск по тегам, людям (в разработке)</p></div></div>
           <div class="screen" id="profileScreen">
             <div class="profile-card">
@@ -654,7 +817,6 @@
         </div>
       </div>
     `;
-    // перепривязка событий
     renderFeed();
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -665,10 +827,10 @@
     });
     initModal();
     initHamburger();
+    initFilters();
     setActiveScreen('feed');
   }
 
-  // СТАРТ
   (function start() {
     const savedUser = localStorage.getItem('backstage_user');
     if(savedUser) {
