@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Backstage — закрытое сообщество музыкантов</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Comfortaa', 'Inter', system-ui, -apple-system, sans-serif;
+      background: #FDF7F0;  /* тёплый кремовый фон */
+      color: #2E2E2E;
+      line-height: 1.45;
+    }
+
+    /* Основные переменные */
+    :root {
+      --bg-body: #FDF7F0;
+      --card-bg: #FFFFFF;
+      --accent: #D96C4A;
+      --accent-dark: #BF5A3A;
+      --text-primary: #2E2E2E;
+      --text-secondary: #7A6F64;
+      --border-light: #EAE2D9;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+      --radius-card: 20px;
+      --radius-btn: 40px;
+    }
+
+    /* контейнер-телефон */
+    .app-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--bg-body);
+      min-height: 100vh;
+      position: relative;
+      box-shadow: 0 0 0 1px var(--border-light);
+    }
+
+    /* Хедер */
+    .app-header {
+      position: sticky;
+      top: 0;
+      background: rgba(253, 247, 240, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-light);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+
+    .logo span {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* гамбургер */
+    .hamburger {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background 0.2s;
+      color: var(--text-primary);
+    }
+
+    .hamburger:hover {
+      background: var(--border-light);
+    }
+
+    /* контент */
+    .main-content {
+      padding: 20px 16px 90px;
+    }
+
+    /* лента (карточки) */
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .post-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-card);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+      transition: all 0.2s;
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge-type {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 30px;
+      background: #F4EDE6;
+      color: var(--text-secondary);
+    }
+
+    .badge-type.work {
+      background: #FFEEE6;
+      color: var(--accent);
+    }
+    .badge-type.gear {
+      background: #E8F0EA;
+      color: #2F6B47;
+    }
+    .badge-type.discourse {
+      background: #FEF3E2;
+      color: #C47A2E;
+    }
+
+    .verified-mark {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      border-left: 1px solid var(--border-light);
+      padding-left: 10px;
+    }
+
+    .post-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .post-meta {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .post-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .tag {
+      background: #F4EDE6;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    hr {
+      margin: 12px 0;
+      border: none;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .chat-action {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    /* плавающая кнопка */
+    .fab {
+      position: fixed;
+      bottom: 80px;
+      right: calc(50% - 280px);
+      width: 56px;
+      height: 56px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      box-shadow: 0 4px 14px rgba(217, 108, 74, 0.4);
+      cursor: pointer;
+      transition: 0.2s;
+      border: none;
+      z-index: 200;
+    }
+
+    .fab:hover {
+      background: var(--accent-dark);
+      transform: scale(1.02);
+    }
+
+    @media (max-width: 600px) {
+      .fab {
+        right: 20px;
+        bottom: 80px;
+      }
+    }
+
+    /* модальное окно */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      max-width: 460px;
+      width: 90%;
+      border-radius: 28px;
+      padding: 28px 24px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-light);
+    }
+
+    .modal-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 18px;
+      color: var(--text-primary);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-secondary);
+    }
+
+    select, input, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: white;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border-light);
+      padding: 12px;
+      border-radius: 40px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* нижняя навигация */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 16px 18px;
+      border-top: 1px solid var(--border-light);
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 11px;
+      transition: 0.2s;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* экраны */
+    .screen {
+      display: none;
+      animation: fade 0.2s ease;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    /* профиль (заглушка тёплая) */
+    .profile-card {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 24px;
+      text-align: center;
+      border: 1px solid var(--border-light);
+    }
+    .avatar {
+      width: 80px;
+      height: 80px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: white;
+      margin: 0 auto 12px;
+    }
+
+    /* меню */
+    .side-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 260px;
+      height: 100%;
+      background: var(--card-bg);
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.08);
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      z-index: 300;
+      padding: 70px 20px 30px;
+      border-left: 1px solid var(--border-light);
+    }
+
+    .side-menu.open {
+      transform: translateX(0);
+    }
+
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.2);
+      backdrop-filter: blur(2px);
+      z-index: 299;
+      display: none;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    /* доступ */
+    .access-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-body);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+    .access-card {
+      background: var(--card-bg);
+      border-radius: 32px;
+      padding: 36px 24px;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper" id="appRoot">
+  <!-- динамический контент будет заполняться через js -->
+</div>
+
+<script>
+  // ---------- ДАННЫЕ ----------
+  let posts = [
+    { id: "1", type: "work", title: "Барабанщик на запись альбома (пост-рок)", description: "Студия в центре, 4 трека, оплата 15к + роялти. Пришлите демо в личку.", tags: ["барабаны","студия","пост-рок"], createdAt: new Date(Date.now()-86400000), author: "Антон Д." },
+    { id: "2", type: "gear", title: "Fender Stratocaster MIM 2020 · обмен на Gibson", description: "Отличное состояние, оригинальный кейс. Готов доплатить.", tags: ["гитара","fender","обмен"], createdAt: new Date(Date.now()-172800000), author: "Мария (гитара)" },
+    { id: "3", type: "discourse", title: "Neural DSP плагины — что брать?", description: "Gojira или Petrucci? У кого опыт использования?", tags: ["софт","гитара","нейросети"], createdAt: new Date(Date.now()-3600000), author: "Коля (djent)" }
+  ];
+
+  let currentUser = null; 
+  let activeTab = "feed";
+
+  // helpers
+  function formatDate(date) {
+    return `${date.getDate()} ${date.toLocaleString('ru',{month:'short'})} · ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+  }
+
+  function getTypeMeta(type) {
+    if(type === 'work') return { label: 'вакансия / проект', class: 'work' };
+    if(type === 'gear') return { label: 'оборудование', class: 'gear' };
+    return { label: 'дискурс', class: 'discourse' };
+  }
+
+  function escapeHtml(str) {
+    if(!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if(m === '&') return '&amp;';
+      if(m === '<') return '&lt;';
+      return '&gt;';
+    });
+  }
+
+  function renderFeed() {
+    const feedContainer = document.getElementById('feedList');
+    if(!feedContainer) return;
+    if(posts.length===0) {
+      feedContainer.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-secondary);">Нет публикаций · создайте первую</div>';
+      return;
+    }
+    feedContainer.innerHTML = posts.map(post => {
+      const meta = getTypeMeta(post.type);
+      const dateStr = formatDate(new Date(post.createdAt));
+      const tagsHtml = post.tags.map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join('');
+      return `
+        <div class="post-card">
+          <div class="post-header">
+            <span class="badge-type ${meta.class}">${meta.label}</span>
+            <span class="verified-mark">${escapeHtml(post.author)} · проверен</span>
+          </div>
+          <div class="post-title">${escapeHtml(post.title)}</div>
+          <div class="post-meta">${dateStr}</div>
+          <div class="post-desc">${escapeHtml(post.description)}</div>
+          <div class="tags">${tagsHtml}</div>
+          <hr />
+          <div class="chat-action"><i class="fa-regular fa-message"></i> Написать в чат</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function addNewPost(type, title, desc, tagsRaw) {
+    const tags = tagsRaw.split(',').map(t=>t.trim()).filter(t=>t);
+    const newPost = {
+      id: Date.now().toString(),
+      type: type,
+      title: title,
+      description: desc,
+      tags: tags,
+      createdAt: new Date(),
+      author: currentUser?.name || "Участник"
+    };
+    posts.unshift(newPost);
+    renderFeed();
+    // переключиться на ленту
+    setActiveScreen('feed');
+  }
+
+  // навигация
+  function setActiveScreen(screenId) {
+    activeTab = screenId;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const targetScreen = document.getElementById(`${screenId}Screen`);
+    if(targetScreen) targetScreen.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    const activeNav = document.querySelector(`.nav-item[data-screen="${screenId}"]`);
+    if(activeNav) activeNav.classList.add('active');
+  }
+
+  // плавающая кнопка + модалка
+  function initModal() {
+    const modal = document.getElementById('createModal');
+    const fab = document.getElementById('fabBtn');
+    const closeModal = () => { modal.style.display = 'none'; };
+    fab.onclick = () => { modal.style.display = 'flex'; };
+    document.getElementById('cancelPost').onclick = closeModal;
+    document.getElementById('submitPost').onclick = () => {
+      const type = document.getElementById('postType').value;
+      const title = document.getElementById('postTitle').value.trim();
+      const desc = document.getElementById('postDesc').value.trim();
+      const tags = document.getElementById('postTags').value;
+      if(!title || !desc) { alert('Заголовок и описание обязательны'); return; }
+      addNewPost(type, title, desc, tags);
+      closeModal();
+      document.getElementById('postTitle').value = '';
+      document.getElementById('postDesc').value = '';
+      document.getElementById('postTags').value = '';
+    };
+    window.onclick = (e) => { if(e.target === modal) closeModal(); };
+  }
+
+  // гамбургер меню
+  function initHamburger() {
+    const menuEl = document.getElementById('sideMenu');
+    const overlay = document.getElementById('menuOverlay');
+    const openBtn = document.getElementById('hamburgerBtn');
+    const closeMenu = () => {
+      menuEl.classList.remove('open');
+      overlay.style.display = 'none';
+    };
+    openBtn.onclick = () => {
+      menuEl.classList.add('open');
+      overlay.style.display = 'block';
+    };
+    overlay.onclick = closeMenu;
+    document.getElementById('logoutBtn').onclick = () => {
+      localStorage.removeItem('backstage_user');
+      location.reload();
+    };
+  }
+
+  // система аутентификации
+  function renderAccessScreen() {
+    const root = document.getElementById('appRoot');
+    root.innerHTML = `
+      <div class="access-screen" id="accessWrap">
+        <div class="access-card">
+          <h2 style="color: var(--accent);">Backstage</h2>
+          <p style="margin: 8px 0 24px;">закрытое сообщество музыкантов</p>
+          <input type="text" id="inviteCodeInput" placeholder="код приглашения" style="width:100%; padding:14px; border-radius:60px; border:1px solid var(--border-light); margin-bottom:16px;">
+          <button id="enterAccessBtn" style="background: var(--accent); border:none; color:white; padding:12px; border-radius:40px; width:100%; font-weight:600;">войти</button>
+          <div id="accessError" style="margin-top:12px; font-size:13px; color:#c2410c;"></div>
+          <div style="margin-top: 20px; font-size:12px; color:var(--text-secondary);">demo-код: BACKSTAGE2026</div>
+        </div>
+      </div>
+    `;
+    document.getElementById('enterAccessBtn').onclick = () => {
+      const code = document.getElementById('inviteCodeInput').value.trim().toUpperCase();
+      if(code === 'BACKSTAGE2026') {
+        currentUser = { id: 'u1', name: 'Анна Смирнова', role: 'musician', verified: true };
+        localStorage.setItem('backstage_user', JSON.stringify(currentUser));
+        renderMainApp();
+      } else {
+        document.getElementById('accessError').innerText = 'Неверный код приглашения';
+      }
+    };
+  }
+
+  function renderMainApp() {
+    const root = document.getElementById('appRoot');
+    root.innerHTML = `
+      <div>
+        <header class="app-header">
+          <div class="logo">Back<span>stage</span></div>
+          <button class="hamburger" id="hamburgerBtn">:</i></button>
+        </header>
+        <div class="main-content">
+          <div class="screen active" id="feedScreen"><div class="feed-list" id="feedList"></div></div>
+          <div class="screen" id="searchScreen"><div style="background: white; border-radius: 28px; padding: 24px; text-align: center;"><i class="fa-solid fa-search"></i> <p style="margin-top: 12px;">Поиск по тегам, людям (в разработке)</p></div></div>
+          <div class="screen" id="profileScreen">
+            <div class="profile-card">
+              <div class="avatar">А</div>
+              <h3 style="margin: 8px 0 4px;">Анна Смирнова</h3>
+              <p style="color: var(--text-secondary);">гитара, вокал · Москва</p>
+              <p style="margin-top: 12px;">12 публикаций · 2 коллабы</p>
+            </div>
+          </div>
+        </div>
+        <nav class="bottom-nav">
+          <a href="#" class="nav-item active" data-screen="feed"><i class="fa-regular fa-rectangle-list nav-icon"></i><span>Лента</span></a>
+          <a href="#" class="nav-item" data-screen="search"><i class="fa-regular fa-compass nav-icon"></i><span>Поиск</span></a>
+          <a href="#" class="nav-item" data-screen="profile"><i class="fa-regular fa-user nav-icon"></i><span>Профиль</span></a>
+        </nav>
+        <button class="fab" id="fabBtn">+</button>
+        <div class="modal" id="createModal">
+          <div class="modal-card">
+            <h3>Новая публикация</h3>
+            <div class="form-group"><label>Тип</label><select id="postType"><option value="work">Вакансия / проект</option><option value="gear">Оборудование</option><option value="discourse">Дискурс</option></select></div>
+            <div class="form-group"><label>Заголовок</label><input id="postTitle" placeholder="например: Ищем басиста"></div>
+            <div class="form-group"><label>Описание</label><textarea id="postDesc" rows="3" placeholder="Подробности, условия..."></textarea></div>
+            <div class="form-group"><label>Теги (через запятую)</label><input id="postTags" placeholder="гитара, сессия, студия"></div>
+            <div class="modal-buttons"><button class="btn-secondary" id="cancelPost">Отмена</button><button class="btn-primary" id="submitPost">Опубликовать</button></div>
+          </div>
+        </div>
+        <div class="menu-overlay" id="menuOverlay"></div>
+        <div class="side-menu" id="sideMenu">
+          <a href="#" class="menu-item"><i class="fa-regular fa-user"></i> Мой профиль</a>
+          <a href="#" class="menu-item"><i class="fa-regular fa-bell"></i> Уведомления</a>
+          <a href="#" class="menu-item"><i class="fa-regular fa-gem"></i> Приглашения</a>
+          <div style="margin: 16px 0; border-top:1px solid var(--border-light);"></div>
+          <a href="#" class="menu-item" id="logoutBtn"><i class="fa-regular fa-arrow-right-from-bracket"></i> Выйти</a>
+        </div>
+      </div>
+    `;
+    // перепривязка событий
+    renderFeed();
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const screen = btn.getAttribute('data-screen');
+        setActiveScreen(screen);
+      });
+    });
+    initModal();
+    initHamburger();
+    setActiveScreen('feed');
+  }
+
+  // СТАРТ
+  (function start() {
+    const savedUser = localStorage.getItem('backstage_user');
+    if(savedUser) {
+      try {
+        currentUser = JSON.parse(savedUser);
+        renderMainApp();
+      } catch(e) { renderAccessScreen(); }
+    } else {
+      renderAccessScreen();
+    }
+  })();
+</script>
+</body>
+</html>
