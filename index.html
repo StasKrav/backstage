@@ -106,9 +106,12 @@
   }
   
   function saveAllData() {
-    // Данные теперь на сервере, кэш обновляется при каждом сохранении
+    // Кэш пользователей
+    localStorage.setItem('backstage_users_cache', JSON.stringify(users));
+    // Текущий пользователь
     if (currentUser) {
       localStorage.setItem('backstage_current_user', JSON.stringify(currentUser));
+      console.log('💾 Сохранён текущий пользователь:', currentUser.name);
     }
   }
   
