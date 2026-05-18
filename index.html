@@ -465,10 +465,10 @@
           ${invitedUsers.length === 0 ? '<p class="empty-invites">Пока никого не пригласили</p>' : 
             invitedUsers.map(u => `<div class="invited-item"><i class="fa-regular fa-user"></i><div><strong>${escapeHtml(u.name)}</strong><div class="invited-details">${escapeHtml(u.instruments)} · ${escapeHtml(u.city)}</div></div></div>`).join('')}
         </div>
-        <div class="backup-section">
-          <h4>🔐 Резервная копия</h4>
-          <p class="backup-hint">Ваши данные теперь хранятся на сервере.<br>Вы можете войти с любого устройства по инвайту.</p>
-        </div>
+        <!-- <div class="backup-section"> -->
+        <!--   <h4>🔐 Резервная копия</h4> -->
+        <!--   <p class="backup-hint">Ваши данные теперь хранятся на сервере.<br>Вы можете войти с любого устройства по инвайту.</p> -->
+        <!-- </div> -->
       `;
       
       const generateInviteBtn = document.getElementById('generateInviteFromProfile');
