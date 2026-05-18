@@ -28,7 +28,6 @@
     invites = storedInvites ? JSON.parse(storedInvites) : [];
     posts = storedPosts ? JSON.parse(storedPosts) : [];
     
-т
     if (invites.length === 0) {
       invites.push({
         code: 'BACKSTAGE2026',
@@ -80,8 +79,18 @@
   }
   
   function createInvite() {
-    if (!currentUser) return null;
+    console.log('🔨 createInvite вызвана');
+    console.log('currentUser:', currentUser);
+    
+    if (!currentUser) {
+      console.error('❌ createInvite: нет currentUser');
+      alert('Ошибка: вы не авторизованы');
+      return null;
+    }
+    
     const code = generateInviteCode();
+    console.log('🔑 Сгенерирован код:', code);
+    
     const newInvite = {
       code: code,
       createdBy: currentUser.id,
@@ -89,14 +98,42 @@
       usedAt: null,
       createdAt: Date.now()
     };
+    
     invites.push(newInvite);
+    console.log('📋 invites после push:', invites);
+    
     saveAllData();
+    console.log('💾 Данные сохранены');
+    
+    // Дополнительная проверка
+    const saved = localStorage.getItem('backstage_invites');
+    console.log('📦 Из localStorage после сохранения:', saved);
+    
     return code;
   }
   
   function validateInviteCode(code) {
-    const invite = invites.find(inv => inv.code === code && !inv.usedBy);
-    if (!invite) return { valid: false, message: 'Неверный или уже использованный код' };
+    console.log('🔍 Проверка инвайта:', code);
+    console.log('📋 Все инвайты:', invites);
+    
+    const cleanCode = code.trim().toUpperCase();
+    
+    const invite = invites.find(inv => {
+      const inviteCode = inv.code.trim().toUpperCase();
+      const isMatch = inviteCode === cleanCode;
+      const isUsed = !!inv.usedBy;
+      console.log(`  Сравнение: ${inviteCode} === ${cleanCode} ? ${isMatch}, использован: ${isUsed}`);
+      return isMatch && !isUsed;
+    });
+    
+    if (!invite) {
+      const existingInvite = invites.find(inv => inv.code.trim().toUpperCase() === cleanCode);
+      if (existingInvite && existingInvite.usedBy) {
+        return { valid: false, message: 'Этот код уже был использован' };
+      }
+      return { valid: false, message: 'Неверный код приглашения' };
+    }
+    
     return { valid: true, invite };
   }
   
@@ -184,12 +221,10 @@
     return userPosts.sort((a, b) => b.createdAt - a.createdAt);
   }
   
-  // ========== КОД ВОССТАНОВЛЕНИЯ (ЭКСПОРТ/ИМПОРТ) ==========
-  // ========== КОД ВОССТАНОВЛЕНИЯ (ЭКСПОРТ/ИМПОРТ) — Unicode-совместимый ==========
+  // ========== КОД ВОССТАНОВЛЕНИЯ ==========
   function generateRestoreCode() {
     if (!currentUser) return null;
     
-    // Данные для экспорта
     const exportData = {
       user: {
         id: currentUser.id,
@@ -203,7 +238,6 @@
       invites: invites.filter(inv => inv.createdBy === currentUser.id)
     };
     
-    // Преобразуем в JSON и кодируем для btoa (поддержка UTF-8)
     const jsonStr = JSON.stringify(exportData);
     const utf8Bytes = unescape(encodeURIComponent(jsonStr));
     const base64 = btoa(utf8Bytes);
@@ -212,29 +246,24 @@
   
   function restoreFromCode(code) {
     try {
-      // Декодируем из base64 с поддержкой UTF-8
       const utf8Bytes = atob(code);
       const jsonStr = decodeURIComponent(escape(utf8Bytes));
       const importData = JSON.parse(jsonStr);
       
-      // Проверка: нет ли уже пользователя с таким ID
       const existingUser = users.find(u => u.id === importData.user.id);
       if (existingUser) {
-        return { success: false, error: 'Аккаунт уже существует на этом устройстве. Восстановление отменено.' };
+        return { success: false, error: 'Аккаунт уже существует на этом устройстве' };
       }
       
-      // Импортируем пользователя
       const newUser = { ...importData.user };
       users.push(newUser);
       
-      // Импортируем посты
       importData.posts.forEach(post => {
         if (!posts.some(p => p.id === post.id)) {
           posts.push(post);
         }
       });
       
-      // Импортируем инвайты
       importData.invites.forEach(invite => {
         if (!invites.some(i => i.code === invite.code)) {
           invites.push(invite);
@@ -319,7 +348,7 @@
     if (activeNav) activeNav.classList.add('active');
   }
   
-  // ========== ПРОФИЛЬ С ВКЛАДКАМИ ==========
+  // ========== ПРОФИЛЬ ==========
   let profileActiveTab = "info";
   
   function renderProfileScreen() {
@@ -398,7 +427,7 @@
       `).join('');
       
       document.querySelectorAll('.action-edit').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', () => {
           const postId = btn.getAttribute('data-id');
           const post = posts.find(p => p.id === postId);
           if (post) showEditPostModal(post);
@@ -406,9 +435,9 @@
       });
       
       document.querySelectorAll('.action-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', () => {
           const postId = btn.getAttribute('data-id');
-          if (confirm('Удалить объявление? Оно будет скрыто из ленты.')) {
+          if (confirm('Удалить объявление?')) {
             deletePost(postId);
             renderProfileScreen();
             renderFeed();
@@ -444,15 +473,19 @@
       if (generateInviteBtn) {
         generateInviteBtn.onclick = () => {
           const newCode = createInvite();
-          const resultDiv = document.getElementById('newInviteResult');
-          resultDiv.innerHTML = `<div class="invite-code-block"><code>${newCode}</code><button class="copy-code-btn">Копировать</button></div>`;
-          resultDiv.querySelector('.copy-code-btn').onclick = () => {
-            navigator.clipboard.writeText(newCode);
-            alert('Код скопирован!');
-          };
-          setTimeout(() => {
-            setTimeout(() => { if (resultDiv) resultDiv.innerHTML = ''; }, 10000);
-          }, 0);
+          if (newCode) {
+            const resultDiv = document.getElementById('newInviteResult');
+            resultDiv.innerHTML = `<div class="invite-code-block"><code>${newCode}</code><button class="copy-code-btn">Копировать</button></div>`;
+            resultDiv.querySelector('.copy-code-btn').onclick = () => {
+              navigator.clipboard.writeText(newCode);
+              alert('Код скопирован!');
+            };
+            setTimeout(() => {
+              if (resultDiv) resultDiv.innerHTML = '';
+            }, 15000);
+          } else {
+            alert('Не удалось создать инвайт. Проверьте консоль.');
+          }
         };
       }
       
@@ -469,7 +502,7 @@
           `;
           resultDiv.querySelector('.copy-code-btn').onclick = () => {
             navigator.clipboard.writeText(restoreCode);
-            alert('Код восстановления скопирован! Сохраните его в надёжном месте.');
+            alert('Код восстановления скопирован!');
           };
           generateRestoreBtn.disabled = true;
           generateRestoreBtn.textContent = 'Код сгенерирован (одноразово)';
@@ -562,7 +595,9 @@
           <div class="logo">Back<span>stage</span></div>
           <button class="hamburger" id="hamburgerBtn">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+              <line x1="4" y1="6" x2="20" y2="6"/>
+              <line x1="4" y1="12" x2="20" y2="12"/>
+              <line x1="4" y1="18" x2="20" y2="18"/>
             </svg>
           </button>
         </header>
@@ -700,7 +735,7 @@
     });
   }
   
-  // ========== ЭКРАНЫ ВХОДА И ВОССТАНОВЛЕНИЯ ==========
+  // ========== ЭКРАНЫ ВХОДА ==========
   let pendingInviteCode = null;
   
   function showInviteInputScreen() {
@@ -809,12 +844,10 @@
     };
   }
   
-
   // ========== СТАРТ ==========
   function startApp() {
     initStorage();
     
-    // Проверяем, есть ли сохранённый пользователь
     const savedUserId = localStorage.getItem('backstage_current_user');
     if (savedUserId) {
       try {
@@ -832,7 +865,6 @@
       }
     }
     
-    // Если нет сохранённого пользователя — показываем экран входа
     showInviteInputScreen();
   }
   
