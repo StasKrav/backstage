@@ -12,9 +12,13 @@
 <body>
 <div class="app-wrapper" id="appRoot"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // ========== НАСТРОЙКИ ==========
-  const API_BASE = 'https://backstage-0y9b.onrender.com/api';
+  // ========== НАСТРОЙКИ SUPABASE ==========
+  const SUPABASE_URL = 'https://smqkbmxdexamawxlyfva.supabase.co';  // ЗАМЕНИ НА СВОЙ URL
+  const SUPABASE_KEY = 'sb_publishable_6UaPIE-uRvecIdMI8tqIZA_kQtOZfYQ';  // ЗАМЕНИ НА СВОЙ PUBLISHABLE КЛЮЧ
+  
+  const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
   
   // ========== ХРАНИЛИЩЕ ==========
   let users = [];
@@ -24,89 +28,84 @@
   
   // ========== ЗАГРУЗКА ДАННЫХ ==========
   async function loadInvites() {
-    const response = await fetch(`${API_BASE}/invites`, { cache: 'no-store' });
-    invites = await response.json();
+    const { data, error } = await supabase.from('invites').select('*');
+    if (error) console.error('Ошибка загрузки инвайтов:', error);
+    else invites = data;
     console.log('📋 Загружены инвайты:', invites.length);
   }
   
   async function loadUsers() {
-    const response = await fetch(`${API_BASE}/users`);
-    users = await response.json();
+    const { data, error } = await supabase.from('users').select('*');
+    if (error) console.error('Ошибка загрузки пользователей:', error);
+    else users = data;
     console.log('👥 Загружены пользователи:', users.length);
-    localStorage.setItem('backstage_users_cache', JSON.stringify(users));
   }
   
   async function loadPosts() {
-    const response = await fetch(`${API_BASE}/posts`);
-    const rawPosts = await response.json();
-    posts = rawPosts.map(p => ({ ...p, tags: JSON.parse(p.tags) }));
-    console.log('📝 Загружены посты:', posts.length);
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+    if (error) console.error('Ошибка загрузки постов:', error);
+    else {
+      posts = data.map(p => ({ ...p, tags: JSON.parse(p.tags) }));
+      console.log('📝 Загружены посты:', posts.length);
+    }
   }
   
   // ========== СОХРАНЕНИЕ ==========
   async function saveInviteToServer(code, createdBy) {
-    const response = await fetch(`${API_BASE}/invites`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, created_by: createdBy })
-    });
-    return response.ok;
+    const { error } = await supabase.from('invites').insert([{
+      code: code,
+      created_by: createdBy,
+      created_at: Date.now()
+    }]);
+    if (error) console.error('Ошибка сохранения инвайта:', error);
+    return !error;
   }
   
   async function markInviteAsUsed(code, usedBy) {
-    const response = await fetch(`${API_BASE}/invites/${code}/use`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ used_by: usedBy })
-    });
-    return response.ok;
+    const { error } = await supabase
+      .from('invites')
+      .update({ used_by: usedBy, used_at: Date.now() })
+      .eq('code', code);
+    return !error;
   }
   
   async function saveUserToServer(user) {
-    const response = await fetch(`${API_BASE}/users`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(user)
-    });
-    if (response.ok) {
-      users.push(user);
-      localStorage.setItem('backstage_users_cache', JSON.stringify(users));
-    }
-    return response.ok;
+    const { error } = await supabase.from('users').insert([user]);
+    if (error) console.error('Ошибка сохранения пользователя:', error);
+    return !error;
   }
   
   async function updateUserOnServer(userId, updates) {
-    const response = await fetch(`${API_BASE}/users/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
-    return response.ok;
+    const { error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', userId);
+    return !error;
   }
   
   async function savePostToServer(post) {
-    const response = await fetch(`${API_BASE}/posts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(post)
-    });
-    return response.ok;
+    const { error } = await supabase.from('posts').insert([post]);
+    return !error;
   }
   
   async function updatePostOnServer(postId, updates) {
-    const response = await fetch(`${API_BASE}/posts/${postId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
-    return response.ok;
+    const { error } = await supabase
+      .from('posts')
+      .update(updates)
+      .eq('id', postId);
+    return !error;
   }
   
   async function deletePostOnServer(postId) {
-    const response = await fetch(`${API_BASE}/posts/${postId}`, {
-      method: 'DELETE'
-    });
-    return response.ok;
+    const { error } = await supabase
+      .from('posts')
+      .update({ status: 'deleted' })
+      .eq('id', postId);
+    return !error;
   }
   
   // ========== ЛОГИКА ПРИЛОЖЕНИЯ ==========
@@ -222,7 +221,6 @@
           currentUser = users[userIndex];
           saveAllData();
         }
-        localStorage.setItem('backstage_users_cache', JSON.stringify(users));
       }
       return true;
     }
@@ -465,10 +463,10 @@
           ${invitedUsers.length === 0 ? '<p class="empty-invites">Пока никого не пригласили</p>' : 
             invitedUsers.map(u => `<div class="invited-item"><i class="fa-regular fa-user"></i><div><strong>${escapeHtml(u.name)}</strong><div class="invited-details">${escapeHtml(u.instruments)} · ${escapeHtml(u.city)}</div></div></div>`).join('')}
         </div>
-        <!-- <div class="backup-section"> -->
-        <!--   <h4>🔐 Резервная копия</h4> -->
-        <!--   <p class="backup-hint">Ваши данные теперь хранятся на сервере.<br>Вы можете войти с любого устройства по инвайту.</p> -->
-        <!-- </div> -->
+        <div class="backup-section">
+          <h4>Резервная копия</h4>
+          <p class="backup-hint">Ваши данные теперь хранятся в Supabase.<br>Они не пропадают при перезапуске.</p>
+        </div>
       `;
       
       const generateInviteBtn = document.getElementById('generateInviteFromProfile');
