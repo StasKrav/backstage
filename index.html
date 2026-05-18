@@ -21,11 +21,11 @@
   
  // Дожидаемся загрузки скрипта
    async function initSupabaseClient() {
-       while (typeof supabase === 'undefined') {
-         await new Promise(r => setTimeout(r, 100));
+       if (typeof supabase === 'undefined') {
+         console.error('❌ Supabase библиотека не загружена!');
+         return;
        }
-       supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-       window.supabase = supabaseClient;  // делаем глобальным
+       window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
        console.log('✅ Supabase клиент готов');
      }
   
