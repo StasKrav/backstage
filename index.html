@@ -16,46 +16,34 @@
   // ========== НАСТРОЙКИ ==========
   const API_BASE = 'https://backstage-0y9b.onrender.com/api';
   
-  // ========== ХРАНИЛИЩЕ (КЭШ) ==========
+  // ========== ХРАНИЛИЩЕ ==========
   let users = [];
   let invites = [];
   let posts = [];
   let currentUser = null;
   
-  // ========== ЗАГРУЗКА ДАННЫХ С СЕРВЕРА ==========
+  // ========== ЗАГРУЗКА ДАННЫХ ==========
   async function loadInvites() {
-    const response = await fetch(`${API_BASE}/invites`, {
-      cache: 'no-store', // запрещаем кеширование
-      headers: { 'Cache-Control': 'no-cache' }
-    });
+    const response = await fetch(`${API_BASE}/invites`, { cache: 'no-store' });
     invites = await response.json();
-    console.log('📋 Загружены инвайты (с принудительным обновлением):', invites);
+    console.log('📋 Загружены инвайты:', invites.length);
   }
-
-  // Для ручной проверки в консоли
-  window.checkInvites = async () => {
-    const response = await fetch(`${API_BASE}/invites`);
-    const data = await response.json();
-    console.log('Инвайты с сервера (прямой запрос):', data);
-    console.log('Инвайты в кэше:', invites);
-  };
   
   async function loadUsers() {
-    // Пока нет API для всех пользователей, будем загружать по одному
-    // Для простоты оставим кэш, но при регистрации будем сохранять на сервер
-    const stored = localStorage.getItem('backstage_users_cache');
-    if (stored) users = JSON.parse(stored);
+    const response = await fetch(`${API_BASE}/users`);
+    users = await response.json();
+    console.log('👥 Загружены пользователи:', users.length);
+    localStorage.setItem('backstage_users_cache', JSON.stringify(users));
   }
   
   async function loadPosts() {
     const response = await fetch(`${API_BASE}/posts`);
-    posts = await response.json();
-    // Преобразуем tags обратно в массив
-    posts = posts.map(p => ({ ...p, tags: JSON.parse(p.tags) }));
+    const rawPosts = await response.json();
+    posts = rawPosts.map(p => ({ ...p, tags: JSON.parse(p.tags) }));
     console.log('📝 Загружены посты:', posts.length);
   }
   
-  // ========== СОХРАНЕНИЕ НА СЕРВЕР ==========
+  // ========== СОХРАНЕНИЕ ==========
   async function saveInviteToServer(code, createdBy) {
     const response = await fetch(`${API_BASE}/invites`, {
       method: 'POST',
@@ -81,11 +69,18 @@
       body: JSON.stringify(user)
     });
     if (response.ok) {
-      // Обновляем кэш
-      const existing = users.find(u => u.id === user.id);
-      if (!existing) users.push(user);
+      users.push(user);
       localStorage.setItem('backstage_users_cache', JSON.stringify(users));
     }
+    return response.ok;
+  }
+  
+  async function updateUserOnServer(userId, updates) {
+    const response = await fetch(`${API_BASE}/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
     return response.ok;
   }
   
@@ -98,6 +93,22 @@
     return response.ok;
   }
   
+  async function updatePostOnServer(postId, updates) {
+    const response = await fetch(`${API_BASE}/posts/${postId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    return response.ok;
+  }
+  
+  async function deletePostOnServer(postId) {
+    const response = await fetch(`${API_BASE}/posts/${postId}`, {
+      method: 'DELETE'
+    });
+    return response.ok;
+  }
+  
   // ========== ЛОГИКА ПРИЛОЖЕНИЯ ==========
   async function initStorage() {
     await loadInvites();
@@ -106,12 +117,8 @@
   }
   
   function saveAllData() {
-    // Кэш пользователей
-    localStorage.setItem('backstage_users_cache', JSON.stringify(users));
-    // Текущий пользователь
     if (currentUser) {
       localStorage.setItem('backstage_current_user', JSON.stringify(currentUser));
-      console.log('💾 Сохранён текущий пользователь:', currentUser.name);
     }
   }
   
@@ -152,7 +159,6 @@
     const code = generateInviteCode();
     const success = await saveInviteToServer(code, currentUser.id);
     if (success) {
-      // Обновляем локальный кэш
       invites.push({
         code: code,
         created_by: currentUser.id,
@@ -160,13 +166,14 @@
         used_at: null,
         created_at: Date.now()
       });
-      console.log('✅ Создан и сохранён инвайт:', code);
+      console.log('✅ Создан инвайт:', code);
       return code;
     }
     return null;
   }
   
   async function validateInviteCode(code) {
+    await loadInvites();
     const cleanCode = code.trim().toUpperCase();
     const invite = invites.find(inv => inv.code === cleanCode && !inv.used_by);
     if (!invite) {
@@ -184,7 +191,7 @@
     if (!validation.valid) return { success: false, error: validation.message };
     
     const newUser = {
-      id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      id: 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8),
       name: userData.name,
       instruments: userData.instruments,
       city: userData.city,
@@ -198,8 +205,6 @@
     const inviteMarked = await markInviteAsUsed(inviteCode, newUser.id);
     if (!inviteMarked) return { success: false, error: 'Ошибка отметки инвайта' };
     
-    // Обновляем локальный кэш
-    users.push(newUser);
     const invite = validation.invite;
     invite.used_by = newUser.id;
     invite.used_at = Date.now();
@@ -208,17 +213,17 @@
   }
   
   async function updateProfile(userId, updates) {
-    // Обновляем в кэше
-    const userIndex = users.findIndex(u => u.id === userId);
-    if (userIndex !== -1) {
-      users[userIndex] = { ...users[userIndex], ...updates };
-      if (currentUser && currentUser.id === userId) {
-        currentUser = users[userIndex];
+    const success = await updateUserOnServer(userId, updates);
+    if (success) {
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex !== -1) {
+        users[userIndex] = { ...users[userIndex], ...updates };
+        if (currentUser && currentUser.id === userId) {
+          currentUser = users[userIndex];
+          saveAllData();
+        }
+        localStorage.setItem('backstage_users_cache', JSON.stringify(users));
       }
-      localStorage.setItem('backstage_users_cache', JSON.stringify(users));
-      localStorage.setItem('backstage_current_user', JSON.stringify(currentUser));
-      
-      // TODO: PUT запрос на сервер для обновления пользователя
       return true;
     }
     return false;
@@ -239,27 +244,31 @@
     };
     const success = await savePostToServer(newPost);
     if (success) {
-      posts.unshift({ ...newPost, tags });
+      posts.unshift({ ...newPost, tags: tags });
       return true;
     }
     return false;
   }
   
   async function updatePost(postId, updates) {
-    const postIndex = posts.findIndex(p => p.id === postId);
-    if (postIndex !== -1 && posts[postIndex].user_id === currentUser?.id) {
-      posts[postIndex] = { ...posts[postIndex], ...updates };
-      // TODO: PUT запрос на сервер
+    const success = await updatePostOnServer(postId, updates);
+    if (success) {
+      const postIndex = posts.findIndex(p => p.id === postId);
+      if (postIndex !== -1) {
+        posts[postIndex] = { ...posts[postIndex], ...updates };
+      }
       return true;
     }
     return false;
   }
   
   async function deletePost(postId) {
-    const postIndex = posts.findIndex(p => p.id === postId);
-    if (postIndex !== -1 && posts[postIndex].user_id === currentUser?.id) {
-      posts[postIndex].status = "deleted";
-      // TODO: PUT запрос на сервер
+    const success = await deletePostOnServer(postId);
+    if (success) {
+      const postIndex = posts.findIndex(p => p.id === postId);
+      if (postIndex !== -1) {
+        posts[postIndex].status = "deleted";
+      }
       return true;
     }
     return false;
@@ -434,6 +443,7 @@
           const postId = btn.getAttribute('data-id');
           if (confirm('Удалить объявление?')) {
             await deletePost(postId);
+            await loadPosts();
             renderProfileScreen();
             renderFeed();
           }
@@ -514,6 +524,7 @@
       }
       
       await updatePost(post.id, { title, description, tags });
+      await loadPosts();
       modal.remove();
       renderProfileScreen();
       renderFeed();
@@ -566,10 +577,10 @@
         <header class="app-header">
           <div class="logo">Back<span>stage</span></div>
           <button class="hamburger" id="hamburgerBtn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6"/>
-              <line x1="4" y1="12" x2="20" y2="12"/>
-              <line x1="4" y1="18" x2="20" y2="18"/>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="18" r="1.5" fill="currentColor" stroke="none"/>
             </svg>
           </button>
         </header>
@@ -663,6 +674,7 @@
         const tags = document.getElementById('postTags').value;
         if (!title || !desc) { alert('Заголовок и описание обязательны'); return; }
         await addPost(type, title, desc, tags);
+        await loadPosts();
         modal.style.display = 'none';
         document.getElementById('postTitle').value = '';
         document.getElementById('postDesc').value = '';
@@ -767,6 +779,7 @@
       if (result.success) {
         currentUser = result.user;
         saveAllData();
+        await loadPosts();
         renderMainApp();
       } else {
         document.getElementById('regError').innerText = result.error;
