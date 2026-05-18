@@ -20,17 +20,14 @@
   const SUPABASE_KEY = 'sb_publishable_6UaPIE-uRvecIdMI8tqIZA_kQtOZfYQ';  // ЗАМЕНИ НА СВОЙ PUBLISHABLE КЛЮЧ
   
  // Дожидаемся загрузки скрипта
-   function initSupabase() {
-     if (typeof supabase !== 'undefined') {
-       window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-       console.log('✅ Supabase готов');
-     } else {
-       console.log('⏳ Ожидаем загрузку Supabase...');
-       setTimeout(initSupabase, 100);
+   async function initSupabaseClient() {
+       while (typeof supabase === 'undefined') {
+         await new Promise(r => setTimeout(r, 100));
+       }
+       supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+       window.supabase = supabaseClient;  // делаем глобальным
+       console.log('✅ Supabase клиент готов');
      }
-   }
-   
-   initSupabase();
   
   // ========== ХРАНИЛИЩЕ ==========
   let users = [];
@@ -798,7 +795,9 @@
   }
   
   // ========== СТАРТ ==========
+  // ========== СТАРТ ==========
   async function startApp() {
+    await initSupabaseClient();  // Ждём создания клиента
     await initStorage();
     
     const savedUserId = localStorage.getItem('backstage_current_user');
