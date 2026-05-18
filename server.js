@@ -1,18 +1,32 @@
 const express = require('express');
 const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+// Разрешаем запросы с твоего домена на Vercel
+const allowedOrigins = [
+  'https://backstage-xyz.vercel.app', // замени на свой реальный адрес
+  'http://localhost:3000',
+  'http://localhost:5500'
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 app.use(express.json());
 
 // База данных
 const db = new sqlite3.Database('./backstage.db');
 
-// Создаём таблицы
+// === ИНИЦИАЛИЗАЦИЯ ТАБЛИЦ ===
 db.run(`
   CREATE TABLE IF NOT EXISTS invites (
     code TEXT PRIMARY KEY,
@@ -51,12 +65,11 @@ db.run(`
 db.get("SELECT * FROM invites WHERE code = 'BACKSTAGE2026'", (err, row) => {
   if (!row) {
     db.run("INSERT INTO invites (code, created_by, created_at) VALUES ('BACKSTAGE2026', 'system', ?)", [Date.now()]);
+    console.log('✅ Создан мастер-инвайт BACKSTAGE2026');
   }
 });
 
-// === API ===
-
-// Получить все инвайты
+// ========== API ИНВАЙТОВ ==========
 app.get('/api/invites', (req, res) => {
   db.all("SELECT * FROM invites", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -64,7 +77,6 @@ app.get('/api/invites', (req, res) => {
   });
 });
 
-// Создать инвайт
 app.post('/api/invites', (req, res) => {
   const { code, created_by } = req.body;
   db.run("INSERT INTO invites (code, created_by, created_at) VALUES (?, ?, ?)", 
@@ -76,7 +88,6 @@ app.post('/api/invites', (req, res) => {
   );
 });
 
-// Использовать инвайт
 app.put('/api/invites/:code/use', (req, res) => {
   const { code } = req.params;
   const { used_by } = req.body;
@@ -89,7 +100,23 @@ app.put('/api/invites/:code/use', (req, res) => {
   );
 });
 
-// Зарегистрировать пользователя
+// ========== API ПОЛЬЗОВАТЕЛЕЙ ==========
+app.get('/api/users', (req, res) => {
+  db.all("SELECT id, name, instruments, city, about, created_at FROM users", (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.get('/api/users/:id', (req, res) => {
+  const { id } = req.params;
+  db.get("SELECT id, name, instruments, city, about, created_at FROM users WHERE id = ?", [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Пользователь не найден' });
+    res.json(row);
+  });
+});
+
 app.post('/api/users', (req, res) => {
   const { id, name, instruments, city, about, created_at } = req.body;
   db.run("INSERT INTO users (id, name, instruments, city, about, created_at) VALUES (?, ?, ?, ?, ?, ?)",
@@ -101,16 +128,20 @@ app.post('/api/users', (req, res) => {
   );
 });
 
-// Получить пользователя
-app.get('/api/users/:id', (req, res) => {
+app.put('/api/users/:id', (req, res) => {
   const { id } = req.params;
-  db.get("SELECT * FROM users WHERE id = ?", [id], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(row);
-  });
+  const { name, instruments, city, about } = req.body;
+  db.run("UPDATE users SET name = ?, instruments = ?, city = ?, about = ? WHERE id = ?",
+    [name, instruments, city, about, id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0) return res.status(404).json({ error: 'Пользователь не найден' });
+      res.json({ success: true });
+    }
+  );
 });
 
-// Получить посты
+// ========== API ПОСТОВ ==========
 app.get('/api/posts', (req, res) => {
   db.all("SELECT * FROM posts WHERE status = 'active' ORDER BY created_at DESC", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -118,16 +149,36 @@ app.get('/api/posts', (req, res) => {
   });
 });
 
-// Создать пост
 app.post('/api/posts', (req, res) => {
   const { id, user_id, type, title, description, tags, created_at, status } = req.body;
   db.run("INSERT INTO posts (id, user_id, type, title, description, tags, created_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [id, user_id, type, title, description, JSON.stringify(tags), created_at, status],
+    [id, user_id, type, title, description, tags, created_at, status],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ success: true });
     }
   );
+});
+
+app.put('/api/posts/:id', (req, res) => {
+  const { id } = req.params;
+  const { title, description, tags } = req.body;
+  db.run("UPDATE posts SET title = ?, description = ?, tags = ? WHERE id = ?",
+    [title, description, JSON.stringify(tags), id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0) return res.status(404).json({ error: 'Пост не найден' });
+      res.json({ success: true });
+    }
+  );
+});
+
+app.delete('/api/posts/:id', (req, res) => {
+  const { id } = req.params;
+  db.run("UPDATE posts SET status = 'deleted' WHERE id = ?", [id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
 });
 
 app.listen(port, () => {
