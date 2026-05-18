@@ -15,10 +15,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // ========== НАСТРОЙКИ SUPABASE ==========
+  // ========== НАСТРОЙКИ SUPABASE ==========
   const SUPABASE_URL = 'https://smqkbmxdexamawxlyfva.supabase.co';  // ЗАМЕНИ НА СВОЙ URL
   const SUPABASE_KEY = 'sb_publishable_6UaPIE-uRvecIdMI8tqIZA_kQtOZfYQ';  // ЗАМЕНИ НА СВОЙ PUBLISHABLE КЛЮЧ
   
-  const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Проверяем, не объявлен ли уже supabase
+  if (typeof window.supabaseClient === 'undefined') {
+    window.supabaseClient = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+  const supabase = window.supabaseClient;
   
   // ========== ХРАНИЛИЩЕ ==========
   let users = [];
