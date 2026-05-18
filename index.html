@@ -19,10 +19,18 @@
   const SUPABASE_URL = 'https://smqkbmxdexamawxlyfva.supabase.co';  // ЗАМЕНИ НА СВОЙ URL
   const SUPABASE_KEY = 'sb_publishable_6UaPIE-uRvecIdMI8tqIZA_kQtOZfYQ';  // ЗАМЕНИ НА СВОЙ PUBLISHABLE КЛЮЧ
   
- if (window.supabaseClient) delete window.supabaseClient;
-    
-    // Создаём клиент и сохраняем в window, чтобы не дублировать
-    window.supabaseClient = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
+ // Дожидаемся загрузки скрипта
+   function initSupabase() {
+     if (typeof supabase !== 'undefined') {
+       window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+       console.log('✅ Supabase готов');
+     } else {
+       console.log('⏳ Ожидаем загрузку Supabase...');
+       setTimeout(initSupabase, 100);
+     }
+   }
+   
+   initSupabase();
   
   // ========== ХРАНИЛИЩЕ ==========
   let users = [];
