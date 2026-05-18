@@ -24,10 +24,21 @@
   
   // ========== ЗАГРУЗКА ДАННЫХ С СЕРВЕРА ==========
   async function loadInvites() {
-    const response = await fetch(`${API_BASE}/invites`);
+    const response = await fetch(`${API_BASE}/invites`, {
+      cache: 'no-store', // запрещаем кеширование
+      headers: { 'Cache-Control': 'no-cache' }
+    });
     invites = await response.json();
-    console.log('📋 Загружены инвайты:', invites);
+    console.log('📋 Загружены инвайты (с принудительным обновлением):', invites);
   }
+
+  // Для ручной проверки в консоли
+  window.checkInvites = async () => {
+    const response = await fetch(`${API_BASE}/invites`);
+    const data = await response.json();
+    console.log('Инвайты с сервера (прямой запрос):', data);
+    console.log('Инвайты в кэше:', invites);
+  };
   
   async function loadUsers() {
     // Пока нет API для всех пользователей, будем загружать по одному
