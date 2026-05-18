@@ -5,22 +5,16 @@ const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Разрешаем запросы с твоего домена на Vercel
-const allowedOrigins = [
-  'https://backstage-xyz.vercel.app', // замени на свой реальный адрес
-  'http://localhost:3000',
-  'http://localhost:5500'
-];
-
+// НАСТРОЙКА CORS — РАЗРЕШАЕМ ЗАПРОСЫ С ЛЮБОГО ДОМЕНА (для теста)
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
+  origin: '*',  // Временно разрешаем всем, потом можно ограничить
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Обрабатываем preflight запросы
+app.options('*', cors());
+
 app.use(express.json());
 
 // База данных
